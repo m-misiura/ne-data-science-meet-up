@@ -1,0 +1,746 @@
+---
+execute: 
+  echo: true
+
+format: 
+    revealjs:
+        theme: slides.scss
+        slide-number: true
+        logo: img/logo.png
+        transition: slide 
+        transition-speed: slow
+        small: true
+        code-overflow: wrap
+        self-contained: true # make this true if you want the html file to be self contained
+        from: markdown+emoji
+        width: 1366
+        height: 768        
+---
+
+# Natural Language Processing insights from the National Innovation Centre for Data{background-iframe="hello-matrix/index.html"}
+
+```{python}
+#| echo: false
+import os
+import transformers
+import warnings
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+transformers.logging.set_verbosity_error()
+warnings.filterwarnings("ignore")
+```
+
+## :bust_in_silhouette: About me -- Mac Misiura 
+
+::::{.columns} 
+::: {.column width=50%}
+
+::: {.r-stack}
+![](img/profile-pic.jpeg){width="800" height="625"}
+
+![](img/profile-pic-text-inversion-teddy.png){.fragment width="800" height="625"}
+:::
+:::
+
+::: {.column width=50%}
+
+- Obtained a PhD in Applied Mathematics and Statistics from Newcastle University 
+- Joined [the National Innovation Centre for Data](https://www.nicd.org.uk/) as a Data Scientist in 2021
+- Particularly interested in: 
+    - __Generative AI__, focussing on (open source) Large Language Models an-introduction-to-the-open-source-large-language-models)
+    - __AI Assurance__
+- Anticipates becoming a __prompt engineer__ in the near future :laughing:
+:::
+::::
+
+<p class="footnote">
+_images generated using [textual-inversion fine-tuning for Stable Diffusion](https://colab.research.google.com/github/huggingface/notebooks/blob/main/diffusers/sd_textual_inversion_training.ipynb#scrollTo=tAZq3vFDcFiT)_ | model with a learnt concept of `Me` is available on [Hugging Face](https://huggingface.co/sd-concepts-library/mac-mac)<p>
+
+## :city_sunrise: About National Innovation Centre for Data
+
+![](img/nicd-team.jpg){fig-align="center" height=450}
+
+The National Innovation Centre for Data runs projects with organisations to help them acquire new skills and innovate through data
+
+# :stars: Collaborators
+
+![](img/collaborators-1.png){fig-align="center" height=650}
+
+## :stars: Collaborators
+
+![](img/collaborators-2.png){fig-align="center" height=650}
+
+# :books: Theory
+
+## :raised_hand: What is natural language processing ?
+
+![](img/mouth-tongue-nlp.jpg){fig-align="center"}
+
+__Natural language processing__ is a subfield of Artificial Intelligence (__AI__) concerned with developing systems that deal with natural language
+
+## :raised_hand: What is language ?
+
+__Language__ is a structured system of communication containing the following elements:
+
+- a collection of principles describing how to create appropriate utterances (__grammar__)
+- a set of words relating to the world (__vocabulary__)
+
+## :raised_hand: What is natural language ?
+
+![](img/language-cloud.png){fig-align="center"}
+
+__Natural language__ is any language occurring in a human community by a process of use, repetition, and change without conscious planning or premeditation
+
+## :raised_hand: What is NOT a natural language ?
+
+The following communication systems are not considered natural languages
+
+- constructed languages, i.e. 
+
+    - fictional languages, such as :alien: __Klingon__
+    - programming languages, such as :snake: __Python__
+    - international auxiliary languages, such as :flags: __Esperanto__
+
+- non-human communication systems, such as :honeybee: __bee dancing__
+
+## :scroll: Ancient history of natural language processing
+
+<!-- https://www.cl.cam.ac.uk/archive/ksj21/histdw4.pdf -->
+
+:::: {.columns}
+
+::: {.column width="50%"}
+__Phase 1: 1940s-1960s__
+
+- Research focussed on __machine translation (MT)__ 
+- In 1954, the [Georgetown–IBM experiment](https://en.wikipedia.org/wiki/Georgetown–IBM_experiment) automatically translated 60 Russian sentences to English
+- In 1966, the [ALPAC Report](https://en.wikipedia.org/wiki/ALPAC) concluded that MT did not seem feasible
+:::
+
+::: {.column width="50%"}
+__Phase 2: 1960s-1970s__
+
+- Research focussed on building and querying __knowledge bases__
+- In 1961, the [BASEBALL system](https://dl.acm.org/doi/10.1145/1460690.1460714) was developed to answer questions about baseball
+- In 1964, the [ELIZA system](https://en.wikipedia.org/wiki/ELIZA) simulated a Rogerian psychotherapist
+- In 1970, the [SHRDLU system](https://hci.stanford.edu/~winograd/shrdlu/) simulated a robot which manipulated blocks on a table top with instructions given in English
+:::
+::::
+
+## :scroll: Ancient history of natural language processing 
+
+:::: {.columns}
+
+::: {.column width="50"}
+__Phase 3: 1970s-1990s__
+
+- Initially, research continued to focus on rule-based systems, with an emphasis on syntactic and semantic analysis
+- But, by late 1980s, researchers became more united in focusing on empiricism and probabilistic models (i.e. Hidden Markov Models)
+- Notable progress in practical tasks, such as __speech recognition__ or automatic summarisation was made
+- Major trend focussing on __evaluating performance__ emerged
+:::
+
+::: {.column width="50%"}
+__Phase 4: 1990s-2017__
+
+- In 2003, [Bengio and colleagues](https://www.jmlr.org/papers/volume3/bengio03a/bengio03a.pdf) suggested that __neural networks__ could be used to model natural language
+- In 2013, [Word2vec](https://arxiv.org/abs/1301.3781) introduced a novel way to represent words as dense, continuous-valued vectors in a high-dimensional space, which was notably better than earlier word representation attempts (one-hot encoding or bag-of-words)
+- In 2017, [ELMo](https://arxiv.org/pdf/1802.05365.pdf) introduced the concept of contextualized word embeddings
+:::
+
+::::
+
+## :rocket: Phase 5: 2017-present
+
+This NLP phase is characterised by finding _the winning recipe_ for building __a good language model__: 
+
+\begin{equation}
+\boxed{
+\begin{array}{c}
+\textit{winning recipe} \\
+= \\
+\textbf{huge amounts of easy to acquire data} \\
+\times \\
+\textbf{a simple, high-throughput way to consume it}
+\end{array}
+}
+\end{equation}
+
+## :bulb: Breakthrough 1: subword tokenisation and dense embeddings
+
+:::: {.columns}
+
+::: {.column width="50%"}
+![](img/tokenization_pipeline.svg)
+:::
+
+::: {.column width="50%"}
+Most language models require numerical inputs and thus, text needs to be pre-processed into the expected model format. Text pre-processing focuses on:
+ 
+- splitting the input text into chunks (__tokens__)
+- converting each token to an integer (__token ids__) via look-up tables 
+- mapping __token ids__ to dense, continuous-valued vectors (__embeddings__)
+:::
+::::
+
+## :bulb: Breakthrough 1: subword tokenisation and dense embeddings
+
+```{python}
+#| code-line-numbers: "|1|4|5|8|11|14|17-21|22"
+
+from transformers import AutoTokenizer
+
+# Define input text and checkpoint
+input_text = "NLP is the most interesting subfield of AI"
+checkpoint = "distilbert-base-uncased"
+
+# Initialize the tokenizer
+tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+
+# Tokenize the input text
+input_tokens = tokenizer.tokenize(input_text)
+
+# Convert tokens to IDs
+input_ids = tokenizer.convert_tokens_to_ids(input_tokens)
+
+# Display results
+result_text = (
+    f"Input Text:           {input_text}\n"
+    f"Tokenized Text:       {input_tokens}\n"
+    f"Token IDs:            {input_ids}"
+)
+print(result_text)
+```
+
+## :bulb: Breakthrough 1: subword tokenisation and dense embeddings
+
+```{python}
+#| code-line-numbers: "|1,2|4|7|8|9|12|15,16|19"
+
+import torch
+from transformers import AutoTokenizer, AutoModel
+
+input_text = "NLP is the most interesting subfield of AI"
+
+# Initialize the tokenizer and model
+checkpoint = "distilbert-base-uncased"
+tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+model = AutoModel.from_pretrained(checkpoint)
+
+# Tokenize the input text
+input_tokens = tokenizer(input_text, return_tensors="pt")
+
+# Get the input embeddings
+input_embeddings = model.get_input_embeddings()
+embeddings = input_embeddings(input_tokens["input_ids"])
+
+# Display the actual embeddings and their shape
+print(f"Shape:      {embeddings.shape}\n" f"Embeddings: {embeddings}")
+```
+
+## :raised_hand: Why tokenise at subword-level ?
+
+There are many advantages to subword-level tokenisation, including:
+
+- generalisation to unseen words (variations, misspellings, novel types)
+- language agnosticism
+- efficient use of memory
+- data-driven adaptation to different domains
+
+## :bulb: Breakthrough 2: self-supervised learning
+
+![](img/denosing-auto-enc.png){fig-align="center" height=450}
+
+- Originally conceived in the [1980s](https://ai.facebook.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/), revived in [2008 by researchers at the University of Montreal](https://www.cs.toronto.edu/~larocheh/publications/icml-2008-denoising-autoencoders.pdf) and popularised by the [BERT paper](https://arxiv.org/abs/1810.04805) in 2018
+- Aims to reconstruct the input or predict missing parts of the input
+
+## :bulb: Breakthrough 2: self-supervised learning
+
+Currently, the state-of-the art language models are pre-trained using self-supervised learning, usually via [language modelling](https://huggingface.co/docs/transformers/v4.17.0/en/tasks/language_modeling):
+
+```{python}
+#| code-line-numbers: "|1|4|7|10|13,14"
+
+from transformers import pipeline
+
+# Define input text
+input_text = "The goal of this workshop is to <mask> the audience about the power of NLP"
+
+# Initialise the pipeline for masked language modelling
+model = pipeline("fill-mask")
+
+# Get the results
+results = model(input_text)
+
+# Display results
+for i in results:
+    print(f"{i['sequence']} \t {round(i['score'], 3)}")
+```
+
+## :raised_hand: What does pre-training learn ?
+
+While language modelling appears simple, it is a very powerful technique to learn a wide range of things since input sequences can contain any type of information, for example:
+
+```python
+# Example 1: Syntax
+"The quick brown fox jumps <mask> the lazy dog"
+
+# Example 2: Trivia / Knowledge
+"Newcastle University is located in <mask>"
+
+# Example 3: Sentiment
+"I've never laughed so much during a trip to the cinema. The Barbie movie was <mask>"
+
+# Example 4: Coreference
+"Will Ferrell stole the show in this movie. <mask> is such a good actor"
+
+# Example 5: Mathematics
+"I was thinking about the sequence that goes 1, 1, 2, 3, 5, 8, 13, 21, <mask>"
+```
+
+## :raised_hand: Where does the data come from ?
+
+The data used to pre-train language models is usually obtained from the internet, for example:
+
+- [Big Science Corpus](https://huggingface.co/spaces/bigscience/BigScienceCorpus?source=wudaocorpora)
+- [Pushshift Reddit Data](https://arxiv.org/pdf/2001.08435.pdf)
+- [CommonCrawl](https://commoncrawl.org)
+- [BookCorpus](https://github.com/soskek/bookcorpus)
+- [The Pile](https://pile.eleuther.ai)
+
+## :bulb: Breakthrough 3: finding promising architectures 
+
+::::{.columns}
+
+::: {.column width=35%}
+![](img/transformer.png){fig-align="center" height=600}
+:::
+
+::: {.column width=65%}
+__Transformers__ are particularly successful due to:
+
+- __attention__: captures contextual relationships between words, allowing to understand the importance of each word in the context of the entire input
+- __positional encodings__: retains information about the order of words in the input sequence, enabling effective handling of sequential information
+- __parallel computation__: can process the entire input sequence simultaneously, making them computationally efficient and enabling faster training and inference unlike sequential nets (e.g. RNNs)
+:::
+
+::::
+
+<p class="footnote">
+_figure taken from [Attention Is All You Need](https://arxiv.org/pdf/1706.03762.pdf)_<p>
+
+## :raised_hand: What makes a language model large ?
+
+Recall that a language model is a model that learns to fill in the blanks
+
+The definition of a __large language model__ is rather fuzzy and there are different ways to define it, i.e. based on:
+
+- the number of parameters
+- the amount of data used to train the model
+- the ability to carry out a wide range of tasks
+
+## :construction_worker: Large language model workflow
+
+![](img/llm-workflow.png){fig-align="center" height=400}
+
+__Large language models__ could be viewed as a subset of [foundation models](https://arxiv.org/abs/2108.07258), which describe the paradigm shift within AI from developing task-specific models trained on narrow data to developing multi-purpose models trained on broad data
+
+# :scream: Large Language Models for everything: size matters
+
+## :bomb: Potential paradigm shift {.smaller}
+
+In 2020, [Brown and colleagues](https://arxiv.org/pdf/2005.14165.pdf) report the following:
+
+> Here we show that scaling up language models greatly improves task-agnostic, few-shot performance, sometimes even reaching competitiveness with prior state-of-the-art fine-tuning approaches. Specifically, we train GPT-3, an autoregressive language model with 175 billion parameters, 10x more than any previous non-sparse language model, and test its performance in the few-shot setting. For all tasks, GPT-3 is applied without any gradient updates or fine-tuning, with tasks and few-shot demonstrations specified purely via text interaction with the model. GPT-3 achieves strong performance on many NLP datasets, including translation, question-answering, and cloze tasks, as well as several tasks that require on-the-fly reasoning or domain adaptation, such as unscrambling words, using a novel word in a sentence, or performing 3-digit arithmetic. At the same time, we also identify some datasets where GPT-3’s few-shot learning still struggles, as well as some datasets where GPT-3 faces methodological issues related to training on large web corpora
+
+## :mag: Scaling laws 
+
+![](img/scaling-laws.png){fig-align="center" height=275}
+
+In 2020, [J. Kaplan and colleagues](https://arxiv.org/pdf/2001.08361.pdf) demonstrated that the performance of Large Language Models appears to improve with scaling:
+
+- __compute__
+- __data__
+- __model size__
+
+<p class="footnote">_figure taken from [Scaling Laws for Neural Language Models](https://arxiv.org/pdf/2001.08361.pdf/)_<p>
+
+## :mag: Scaling laws -- model size
+
+![](img/llm-sizes.jpeg){fig-align="center" height=600}
+
+<p class="footnote">_figure taken from [ChatGPT, GenerativeAI and Large Language Models Timeline](https://github.com/hollobit/GenAI_LLM_timeline)_<p>
+
+## :mag: Scaling laws -- data size
+
+![](img/token_sizes.png){fig-align="center" height=500}
+
+<p class="footnote">_figure taken from [BabyLM Challenge](https://babylm.github.io/)_<p>
+
+## :hatching_chick: Emergent abilities in Large Language Models 
+
+![](img/emergent-abilities.png){fig-align="center" height=405}
+
+- Breakthroughs 1-3 have had a notable impact on the performance of (generative) Large Language Models which are now state-of-the-art for most benchmark NLP tasks 
+
+- Moreover, 2022, [J. Wei and colleagues](https://arxiv.org/pdf/2206.07682.pdf) observed __emergent abilities__ for many additional tasks 
+
+<p class="footnote">_figure taken from [Emergent Abilities of Large Language Models](https://arxiv.org/pdf/2206.07682.pdf)_<p>
+
+## :hatching_chick: Emergent abilities in Large Language Models
+
+![](img/tree-of-skills.gif){height=550}
+
+<p class="footnote">_animation taken from [Pathways Language Model (PaLM): Scaling to 540 Billion Parameters for Breakthrough Performance](https://ai.googleblog.com/2022/04/pathways-language-model-palm-scaling-to.html)_<p>
+
+## :hatching_chick: Emergent abilities in Large Language Models
+
+![](img/emoji-movie.png){fig-align="center" height=475}
+
+:astonished: Some Large Language Models appear to be capable of identifying movies from emojis :astonished:
+
+<p class="footnote">_figure taken from [Beyond the Imitation Game benchmark](https://arxiv.org/pdf/2206.04615.pdf)_<p>
+
+## :raised_hand: What (somewhat useful) tasks can large language models actually perform ?
+
+Large language models can perform a wide range of tasks, some of the most popular tasks include:
+
+- __classification__
+- __summarisation__
+- __translation__
+- __question answering__
+- __generation__
+
+## :diamonds: :spades: :hearts: :clubs: Classification
+
+__Classification__ is the task of assigning a label to either a sequence of tokens or each token in a sequence
+
+__Sequence classification__ can be used for: 
+
+- _sentiment analysis_: identifying sentiments or polarity of a text
+- _grammatical correctness_: identifying whether a sentence follows grammatical rules
+
+__Token classification__ can be used for:
+
+- _named entity recognition_: identifying entities in text
+- _part-of-speech tagging_: identifying semantic categories of words
+
+## :speech_balloon: Sequence classification -- sentiment analysis
+
+Using the [Hugging Face Pipeline API](https://huggingface.co/docs/transformers/main_classes/pipelines):
+```{python}
+#| code-line-numbers: "|1|3|4|5|8"
+
+from transformers import pipeline
+
+input_text = "American Football is the best sport in the world"
+sentiment_model = pipeline("sentiment-analysis")
+output = sentiment_model(input_text)
+
+# display results
+f"Sentiment is: {output[0]['label']} with a score of {output[0]['score']}"
+```
+
+## :gun: Sequence classification -- zero-shot classification with custom labels
+
+Using the [Hugging Face Pipeline API](https://huggingface.co/docs/transformers/main_classes/pipelines):
+
+```{python}
+#| code-line-numbers: "|1|3|4|5|6|9,10"
+
+from transformers import pipeline
+
+input_text = "I like napping"
+zero_shot_model = pipeline("zero-shot-classification")
+candidate_labels = ["sleeping", "eating", "working"]
+output = zero_shot_model(input_text, candidate_labels= candidate_labels)
+
+# display results
+for i in range(len(output["labels"])):
+    print(f"{output['labels'][i]}: {output['scores'][i]}")
+```
+
+## :dancer: :alien: :bear: Token classification -- named entity recognition
+
+Using the [Hugging Face Pipeline API](https://huggingface.co/docs/transformers/main_classes/pipelines):
+
+```{python}
+#| code-line-numbers: "|1|3|4|5|8,9"
+
+from transformers import pipeline
+
+input_text = "Newcastle University is located in Newcastle upon Tyne"
+ner_model = pipeline("ner")
+output = ner_model(input_text, aggregation_strategy='simple')
+
+# display results
+for i in output:
+    print(f"{i['entity_group']}: {i['word']}")
+```
+## :pushpin: Summarisation
+
+__Summarisation__ is the task of producing a shorter version of text while retaining its key points
+
+There are two key variants of this task, including:
+
+- __extractive summarisation__: selecting spans of text from the input text to form a summary
+- __abstractive summarisation__: generating new text conditional on input text to form a summary
+
+## :football: Summarisation -- examples
+
+Consider the following input text: 
+
+```{python}
+# define input text
+input_text = """
+American football (referred to simply as football in the United States and Canada), also known as gridiron, is a team sport played by two teams of eleven players on a rectangular field with goalposts at each end. The offense, the team with possession of the oval-shaped football, attempts to advance down the field by running with the ball or passing it, while the defense, the team without possession of the ball, aims to stop the offense's advance and to take control of the ball for themselves. The offense must advance at least ten yards in four downs or plays; if they fail, they turn over the football to the defense, but if they succeed, they are given a new set of four downs to continue the drive. Points are scored primarily by advancing the ball into the opposing team's end zone for a touchdown or kicking the ball through the opponent's goalposts for a field goal. The team with the most points at the end of a game wins.
+
+American football evolved in the United States, originating from the sports of soccer and rugby. The first American football match was played on November 6, 1869, between two college teams, Rutgers and Princeton, using rules based on the rules of soccer at the time. A set of rule changes drawn up from 1880 onward by Walter Camp, the "Father of American Football", established the snap, the line of scrimmage, eleven-player teams, and the concept of downs. Later rule changes legalized the forward pass, created the neutral zone and specified the size and shape of the football. The sport is closely related to Canadian football, which evolved in parallel with and at the same time as the American game, although its rules were developed independently from those of Camp. Most of the features that distinguish American football from rugby and soccer are also present in Canadian football. The two sports are considered the primary variants of gridiron football.
+
+American football is the most popular sport in the United States in terms of broadcast viewership audience. The most popular forms of the game are professional and college football, with the other major levels being high-school and youth football. As of 2012, nearly 1.1 million high-school athletes and 70,000 college athletes play the sport in the United States annually. The National Football League, the most popular American professional football league, has the highest average attendance of any professional sports league in the world. Its championship game, the Super Bowl, ranks among the most-watched club sporting events in the world. The league has an annual revenue of around US$15 billion, making it the most valuable sports league in the world. Other professional leagues exist worldwide, but the sport does not have the international popularity of other American sports like baseball or basketball.
+"""
+```
+
+## :speaker: Summarisation -- abstractive
+
+Using the [Hugging Face Pipeline API](https://huggingface.co/docs/transformers/main_classes/pipelines):
+
+```{python}
+#| code-line-numbers: "|1|4|5|8"
+
+from transformers import pipeline
+
+# define the default abstractive summarisation pipeline
+summary_model = pipeline("summarization")
+output = summary_model(input_text, min_length=10, max_length=100)
+
+# display results
+output[0]["summary_text"]
+```
+
+## :question: Question answering
+
+__Question answering__ is the task of retrieving an answer to a question posed in natural language
+
+There are three key variants of this task, including:
+
+- __extractive__: the answer is a span of text from the context
+- __open generative__: the answer is free text based on the context
+- __closed generative__: the answer is free text; no context is provided
+
+Note that the context can be either structured (e.g. tabular) or unstructured (e.g. textual)
+
+## :question: Question answering -- extractive {.scrollable}
+
+::::{.rows}
+::: {.row width=50%}
+![](img/business-cat-wide.jpg){fig-align="center" height=400}
+:::
+
+::: {.row width=50%}
+
+__Textual context__:
+
+```{python}
+#| code-line-numbers: "|1|3|4|5|6|9"
+
+from transformers import pipeline
+
+context = "My name is Larry the Cat and I live at 10 Downing Street"
+qa_model = pipeline("question-answering")
+question = "Where do I live?"
+output = qa_model(question=question, context=context)
+
+# display results
+f"Answer: {output['answer']}"
+```
+:::
+::::
+
+## :question: Question answering -- extractive
+
+__Tabular context__:
+
+::::{.columns}
+
+::: {.column width=30%}
+```{python}
+#| echo: false
+
+import pandas as pd
+
+dictionary = {
+    "players": ["Patrick Mahomes", "Tom Brady", "Aaron Rodgers", "Brock Purdy"], 
+    "titles": ["2", "7", "1", "0"]
+}
+context = pd.DataFrame.from_dict(dictionary)
+print(context)
+```
+:::
+
+::: {.column width=70%}
+```{python}
+#| code-line-numbers: "|1,2|5-8|9|10|13|14|17"
+#| code-overflow: scroll
+
+from transformers import pipeline
+import pandas as pd
+
+# prepare table + question
+dictionary = {
+    "players": ["Patrick Mahomes", "Tom Brady", "Aaron Rodgers", "Brock Purdy"], 
+    "titles": ["2", "7", "1", "0"]
+}
+context = pd.DataFrame.from_dict(dictionary)
+question = "which player have the most Super Bowls?"
+
+# pipeline model
+tqa_model = pipeline("table-question-answering")
+output = tqa_model(table=context, query=question)
+
+# display results
+f"Answer: {output['cells'][0]}"
+```
+:::
+::::
+
+## :question: Question answering -- extractive
+
+__Image context__:
+
+::::{.columns}
+
+::: {.column width=25%}
+![](img/realistic-receipt.jpeg){fig-align="center" height=600}
+:::
+
+::: {.column width=75%}
+
+```{python}
+#| code-line-numbers: "|1,2|4|5|7|8|9|12"
+
+from transformers import pipeline
+from PIL import Image
+
+checkpoint = "naver-clova-ix/donut-base-finetuned-docvqa"
+image_qa = pipeline("document-question-answering", model=checkpoint)
+
+question = "What is the total?"
+image = Image.open("img/realistic-receipt.jpeg")
+output = image_qa(image=image, question=question)
+
+# display results
+print(output)
+```
+:::
+::::
+
+## :book: Question answering -- open generative
+
+Using the [Hugging Face Pipeline API](https://huggingface.co/docs/transformers/main_classes/pipelines)
+
+```{python}
+#| code-line-numbers: "|1|4|5|6|7|10"
+
+from transformers import pipeline
+
+# define the text2text-generation pipeline
+text2text_generator = pipeline("text2text-generation")
+question = "What is 42?"
+context = "42 is the answer to life, the universe and everything"
+output = text2text_generator(f"question: {question} context: {context}")
+
+# display results
+output[0]['generated_text']
+```
+
+## :closed_book: Question answering -- closed generative
+
+Using the [Hugging Face Pipeline API](https://huggingface.co/docs/transformers/main_classes/pipelines)
+
+```{python}
+#| code-line-numbers: "|1|4|7|8|9|12"
+
+from transformers import pipeline
+
+# define question
+input_text = "What is 42 ?"
+
+# define the text generation pipeline
+checkpoint = "EleutherAI/gpt-neo-125m"
+text_generation_model = pipeline("text-generation", model = checkpoint)
+output = text_generation_model(input_text, max_new_tokens=20)
+
+# display results
+output[0]["generated_text"]
+```
+
+## :shirt: Retrieval Augmented Generation (RAG)
+
+__RAG__ is a technique for augmenting LLM knowledge with additional data using the two following steps:
+
+![](img/rag_indexing.png){fig-align="center" height=300}
+
+__Step 1__: create an index of documents
+
+## :shirt: Retrieval Augmented Generation (RAG)
+
+__RAG__ is a technique for augmenting LLM knowledge with additional data using the two following steps:
+
+![](img/rag_retrieval_generation.png){fig-align="center" height=300}
+
+__Step 2__:
+
+- __retrieval__: retrieve relevant documents from the index
+- __generation__: generate an answer based on the retrieved documents
+
+## :shirt: Retrieval Augmented Generation (RAG)
+
+![](img/open_qn_rag_stack.png){fig-align="center" height=400}
+
+There is a lots of nuance to RAG and it is a rather active area of research, for more details see this [blog post](https://blog.langchain.dev/applying-openai-rag/)
+
+# :gem: RAG components
+
+## :trophy: Choosing the right vectorstore
+
+There is (too many) vectorstores [available](https://python.langchain.com/docs/integrations/vectorstores); some of the most popular open-source ones include:
+
+1. [chroma](https://github.com/chroma-core/chroma)
+2. [pgvector](https://github.com/pgvector/pgvector)
+
+They both support exact and approximate nearest neighbor search
+(L2 distance, inner product, and cosine distance). 
+
+They also support maximal marginal relevance (MMR) re-ranking, which is a technique for re-ranking search results to improve diversity.
+
+## :trophy: Choosing the right model
+
+New large language models are released almost on a weekly basis, making it difficult to pick the appropriate model
+
+To choose the right model, it is important to consider: 
+
+- __the task(s)__ that you want to perform
+- __licenses__
+- __infrastructure__
+
+##  :date: Keeping track of new models -- model list
+
+<iframe src="https://docs.google.com/spreadsheets/d/1O5KVQW1Hx5ZAkcg8AIRjbQLQzx2wVaLl0SqUu-ir9Fs/edit?pli=1#gid=1158069878" title="game_2" width="1400" height="1400" data-external="1"></iframe>
+
+## :date: Benchmark for retriever models
+
+<iframe src="https://mteb-leaderboard.hf.space" title="mteb" width="1400" height="1400" data-external="1"></iframe>
+
+## :date: Benchmark for generator models
+
+<iframe src="https://tatsu-lab.github.io/alpaca_eval/" title="alpaca_eval" width="1400" height="1400" data-external="1"></iframe>
+
+## :date: Benchmark for generator models
+
+<iframe src="https://lmsys-chatbot-arena-leaderboard.hf.space" title="lmsys" width="1400" height="1400" data-external="1"></iframe>
+
+## :date: Keep track of new models -- benchmarks
+
+<iframe src="https://huggingfaceh4-open-llm-leaderboard.hf.space" title="open-llm" width="1400" height="1400" data-external="1"></iframe>
+
